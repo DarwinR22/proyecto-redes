@@ -1,0 +1,26 @@
+# Archivos de Terraform
+*.tfstate
+*.tfstate.backup
+*.tfvars
+crash.log
+terraform.tfplan
+.terraform/
+.terraform.lock.hcl
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Archivos personales o temporales
+*.log
+*.bak
+*.tmp
+*.swp
+
+# Archivos generados
+*.zip
+*.gz
+*.tar
+
+# Archivos de entorno
+.env
