@@ -120,7 +120,11 @@ terraform destroy -var-file="dev.tfvars"
 
 ## 🚀 Diagrama de Arquitectura
 
-!Diagrama de arquitectura
+!Diagrama de Arquitectura
+
+### Diagrama Conceptual
+
+!Diagrama Conceptual
 
 
 ## 🧠 Notas finales
