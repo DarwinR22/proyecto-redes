@@ -1,54 +1,58 @@
-
 # 🔐 Proyecto de Seguridad en Redes TCP/IP en AWS con Terraform
 
-Este repositorio contiene la infraestructura como codigo (IaC) para desplegar una red informatica segura sobre AWS, en el contexto del curso de **Seguridad de Redes TCP/IP**. La solucion cumple con todos los requisitos de infraestructura solicitados, incluyendo servidores clave, dispositivos de seguridad, accesos publicos/privados, y segmentacion de red.
+Este repositorio contiene la infraestructura como código (IaC) para desplegar una red informática segura en la nube de Amazon Web Services (AWS), como parte del curso de **Seguridad de Redes TCP/IP**. El proyecto cumple con todos los requisitos técnicos definidos: incluye segmentación de red, autenticación centralizada, IDS/IPS, acceso privado mediante VPN, firewall, acceso público controlado y simulación de ataques.
 
 ---
 
-## ✅ Fases implementadas
+## 🧠 Descripción General
+
+El diseño de esta infraestructura parte de una arquitectura modular implementada con Terraform, permitiendo la automatización y control total de recursos. Cada componente —servidores, red, seguridad— fue desplegado como un módulo independiente, lo que facilita su mantenimiento, replicabilidad y escalabilidad.
+
+Se utilizaron servicios clave de AWS como EC2, S3, VPC, y se integraron soluciones de código abierto como Suricata, WireGuard y Active Directory para construir una red funcional y segura.
+
+---
+
+## 🗂️ Fases implementadas
 
 ### 🧱 Fase 1: Red Base
-- VPC con bloque CIDR personalizado `10.0.0.0/16`
-- Subred publica (`10.0.1.0/24`) y privada (`10.0.2.0/24`)
-- Internet Gateway + tabla de rutas
-- Infraestructura modularizada
+- VPC `10.0.0.0/16` con subred pública `10.0.1.0/24` y privada `10.0.2.0/24`
+- Internet Gateway, NAT Gateway, tablas de ruteo, NACLs y SGs
+- Infraestructura completamente modularizada con Terraform
 
-### 🌐 Fase 2: Servidor Web
-- EC2 con Amazon Linux 2
-- Apache instalado automaticamente via `user_data.sh`
-- Pagina de login (`index.html`) funcional
-- IP publica con acceso controlado
-- Seguridad: SG con puertos 80, 22 y 3000
+### 🌐 Fase 2: Servidor Web Seguro
+- EC2 con Amazon Linux 2023
+- Backend en Node.js integrado con Active Directory mediante LDAP
+- Certificado HTTPS emitido por Let's Encrypt usando DuckDNS
+- Acceso público cifrado y validado
 
-### 🗂️ Fase 3: Sitio Estatico en S3
-- Bucket con nombre aleatorio (`random_id`)
-- `index.html` publicado automaticamente
-- Configuracion `website` y politica publica activa
+### 🗃️ Fase 3: Sitio Estático en S3
+- Bucket configurado con `aws_s3_bucket_website_configuration`
+- Página HTML accesible públicamente
+- Logs habilitados y configurados
 
-### 🏢 Fase 4: Controlador de Dominio (AD)
+### 🏢 Fase 4: Servidor de Dominio (Active Directory)
 - EC2 con Windows Server 2019
-- IP privada fija (`10.0.1.145`)
-- Preparado para instalacion de Active Directory y GPOs
-- Acceso RDP funcional
+- Configuración de AD DS y DNS
+- Dominio `project-redes.local` con OUs, GPOs, grupos y usuarios definidos
+- Autenticación centralizada para toda la red
 
-### 🛡️ Fase 5: IDS / IPS
-- EC2 Ubuntu 22.04 con Suricata
-- Instalacion automatica via `user_data.sh`
-- Regla personalizada (`alert tcp any any -> any 23`) implementada
-- Listo para deteccion de ataques como Telnet, SYN Flood, etc.
+### 🛡️ Fase 5: IDS/IPS con Suricata
+- EC2 Ubuntu 22.04 configurada como IDS y luego como IPS inline
+- Reglas personalizadas en `local.rules`
+- Logs generados en `/var/log/suricata/eve.json`
+- Detección y bloqueo de escaneo, SYN Flood, sniffing, etc.
 
-### 🔒 Fase 6: VPN y Firewall
-- EC2 con AMI oficial de VNS3 (Marketplace Free Tier)
-- Acceso Web UI en puerto 8000
-- Acceso SSH limitado
-- Puerto UDP 51820 habilitado para VPN (WireGuard/IPsec)
-- Actua como Firewall y NAT Gateway basico
+### 🔒 Fase 6: VPN y Firewall con VNS3
+- EC2 con VNS3 (AMI oficial de Cohesive Networks)
+- VPN tipo WireGuard (puerto UDP 51820)
+- Reglas FORWARD y POSTROUTING para filtrado de tráfico
+- Bloqueo de redes sociales y NAT Gateway integrado
 
-### 🧪 Fase 7: Simulacion de ataques
-- Simulacion de ataque DDoS con multiples peticiones HTTP a servidor web
-- Simulacion de SYN Flood detectado por Suricata
-- Captura de trafico HTTP (sniffing) con Wireshark desde VPN
-- Logs documentados en `/var/log/suricata/`
+### 🧪 Fase 7: Simulación de Ataques
+- DDoS (ICMP flood) desde IP pública y privada
+- SYN Flood simulados con `hping3`
+- Sniffing de credenciales HTTP con Suricata
+- Logs y alertas verificadas y documentadas
 
 ---
 
@@ -68,49 +72,69 @@ Este repositorio contiene la infraestructura como codigo (IaC) para desplegar un
 
 ---
 
-## 📁 Estructura del proyecto
+
+## 📊 Diagramas de Infraestructura
+
+### Diagrama de Arquitectura General
+
+![Diagrama de Arquitectura](diagramas/arquitectura.png)
+
+### Diagrama Conceptual de Componentes
+
+![Diagrama Conceptual](diagramas/conceptual.png)
+
+---
+
+## 📁 Estructura del Proyecto
 
 ```bash
-terraform/
+.
 ├── main.tf
 ├── variables.tf
 ├── outputs.tf
 ├── provider.tf
-├── dev.tfvars
-├── .gitignore
 ├── modules/
 │   ├── vpc/
 │   ├── networking/
-│   ├── ec2/                  # Web server
-│   ├── s3_static_site/       # Hosting en S3
+│   ├── web_server/
 │   ├── windows_domain_server/
-│   ├── ids_ubuntu/           # Suricata IDS/IPS
-│   └── vns3_firewall/          # VNS3 VPN/Firewall
+│   ├── ids_ubuntu/
+│   ├── vns3_firewall/
+│   └── s3_static_site/
+├── environments/
+├── diagramas/
+│   ├── arquitectura.png
+│   └── conceptual.png
+├── user.sh
+├── comandos.sh
+├── suricata.yaml
+├── redes-key.pem / redes-key.pub
+└── dev.tfvars
 ```
 
 ---
 
-## ⚙ Requisitos para desplegar
+## ⚙️ Requisitos para Despliegue
 
-- ✅ Terraform v1.3 o superior
-- ✅ Cuenta de AWS con permisos de EC2, VPC, S3, IAM
-- ✅ Clave SSH valida (`redes-key`)
-- ✅ AMIs especificadas en `dev.tfvars`
+- Terraform v1.3 o superior
+- Cuenta de AWS con permisos EC2, S3, VPC, IAM
+- Clave SSH (`redes-key.pem`)
+- AMIs definidas en `dev.tfvars`
 
 ---
 
-## 🚀 Despliegue rapido
+## 🚀 Despliegue
 
 ```bash
 terraform init
 terraform apply -var-file="dev.tfvars"
 ```
 
-⚠️ Verifica los valores en `dev.tfvars` antes de aplicar.
+⚠️ Revisa cuidadosamente el archivo `dev.tfvars` antes de aplicar.
 
 ---
 
-## 🧹 Limpieza de recursos
+## 🧹 Eliminación de Recursos
 
 ```bash
 terraform destroy -var-file="dev.tfvars"
@@ -118,14 +142,17 @@ terraform destroy -var-file="dev.tfvars"
 
 ---
 
-## 🚀 Diagrama de Arquitectura
+## 🧠 Buenas Prácticas Aplicadas
 
-!Diagrama de Arquitectura
+- Autenticación centralizada (LDAP + Active Directory)
+- Segmentación lógica de red
+- Mínima exposición de puertos
+- Registros y alertas generadas por Suricata
+- Infraestructura como código modular (IaC)
+- Filtrado de contenido y reglas por subred
+- HTTPS obligatorio para servicios expuestos
 
-### Diagrama Conceptual
-
-!Diagrama Conceptual
-
+---
 
 ## 🧠 Notas finales
 
@@ -134,9 +161,9 @@ terraform destroy -var-file="dev.tfvars"
 - Puedes extender esta infraestructura para integrar balanceadores, ACM, o monitoreo con CloudWatch
 
 ---
-
 ## 👨‍💻 Autor
 
-**Darwin Lopez**  
-Proyecto: *Seguridad de Redes TCP/IP*  
-Infraestructura 100% implementada con Terraform y AWS  
+**Darwin Rubelcy Lopez Sanchez**  
+Proyecto: *Aseguramiento de una Red Informática*  
+Desarrollado para el curso Seguridad de Redes TCP/IP  
+Infraestructura implementada 100% con Terraform y AWS  
