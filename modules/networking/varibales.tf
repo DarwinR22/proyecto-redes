@@ -1,23 +1,45 @@
-# 🏛️ ID de la VPC donde se desplegarán los recursos de red (Internet Gateway, subredes, rutas)
 variable "vpc_id" {
-  description = "ID de la VPC donde se crearán las subredes y la tabla de rutas"
+  description = "ID de la VPC donde se desplegarán los recursos"
   type        = string
 }
 
-# 🌐 CIDR de la subred pública (ejemplo: 10.0.1.0/24)
+variable "vpc_cidr" {
+  description = "CIDR principal de la VPC"
+  type        = string
+}
+
 variable "public_subnet_cidr" {
-  description = "Rango CIDR asignado a la subred pública (debe estar dentro del bloque CIDR de la VPC)"
+  description = "CIDR de la subred pública"
   type        = string
 }
 
-# 🔐 CIDR de la subred privada (ejemplo: 10.0.2.0/24)
 variable "private_subnet_cidr" {
-  description = "Rango CIDR asignado a la subred privada (debe estar dentro del bloque CIDR de la VPC)"
+  description = "CIDR de la subred privada"
   type        = string
 }
 
-# 📍 Zona de disponibilidad (ejemplo: us-east-1a)
 variable "availability_zone" {
-  description = "Zona de disponibilidad en la que se crearán las subredes"
+  description = "Zona de disponibilidad (ej: us-east-1a)"
+  type        = string
+}
+
+variable "environment" {
+  description = "Nombre del entorno (dev, prod)"
+  type        = string
+}
+
+variable "extra_tags" {
+  description = "Tags adicionales"
+  type        = map(string)
+  default     = {}
+}
+
+variable "admin_ip" {
+  description = "CIDR de la IP del administrador (ej: 190.14.138.134/32)"
+  type        = string
+}
+
+variable "firewall_ip" {
+  description = "CIDR de la IP del firewall (por ejemplo, la IP de VNS3)"
   type        = string
 }

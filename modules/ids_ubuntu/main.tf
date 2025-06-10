@@ -1,39 +1,72 @@
-# 🛡️ Grupo de Seguridad para IDS/IPS
+#########################################
+# Security Group para IDS/IPS (Suricata)
+#########################################
 resource "aws_security_group" "ids_sg" {
   name        = "ids-sg"
-  description = "Acceso SSH para IDS/IPS"
+  description = "SSH solo desde admin y desde Firewall/VNS3"
   vpc_id      = var.vpc_id
 
+  # SSH desde IP de administrador
   ingress {
-    description = "Permitir conexión SSH desde cualquier IP (puerto 22)"
+    description = "SSH admin"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # 🔐 Recomendación: restringir a IPs conocidas en producción
+    cidr_blocks = [var.admin_ip]
   }
 
+  # SSH desde appliance VNS3 (firewall/VPN)
+  ingress {
+    description = "SSH desde Firewall/VNS3"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.firewall_ip]
+  }
+
+  # Salida libre
   egress {
-    description = "Permitir todo el tráfico de salida"
+    description = "Permitir todo el trafico de salida"
     from_port   = 0
     to_port     = 0
-    protocol    = "-1"               # Todos los protocolos
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    Name = "ids-sg"
-  }
+  tags = merge(
+    var.extra_tags,
+    {
+      Name       = "ids-sg"
+      Project    = var.project
+      Env        = var.environment
+      CostCenter = var.cost_center
+      Owner      = var.owner
+    }
+  )
 }
 
-# 🧠 Instancia EC2 que actuará como IDS/IPS usando Suricata
+#########################################
+# Instancia EC2 para IDS/IPS (Suricata)
+#########################################
 resource "aws_instance" "ids" {
-  ami                         = var.ami_id                           # AMI basada en Ubuntu
-  instance_type               = var.instance_type                    # t2.micro (nivel gratuito)
-  subnet_id                   = var.subnet_id                        # Subred privada o pública
-  vpc_security_group_ids      = [aws_security_group.ids_sg.id]       # Grupo de seguridad con acceso SSH
-  key_name                    = var.key_name                         # Clave SSH
-  associate_public_ip_address = true                                 # Se asigna IP pública
-  user_data                   = file("${path.module}/user_data.sh")  # Script de instalación de Suricata
+  ami                         = var.ami_id
+  instance_type               = var.instance_type
+  subnet_id                   = var.subnet_id
+  vpc_security_group_ids      = [aws_security_group.ids_sg.id]
+  key_name                    = var.key_name
+  associate_public_ip_address = true
+  user_data                   = file("${path.module}/user_data.sh")
 
-  tags = var.tags
+  tags = merge(
+    var.extra_tags,
+    {
+      Name       = "ids-server"
+      Project    = var.project
+      Env        = var.environment
+      CostCenter = var.cost_center
+      Owner      = var.owner
+    }
+  )
 }
+
+

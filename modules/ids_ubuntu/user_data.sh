@@ -1,26 +1,19 @@
 #!/bin/bash
 set -e
 
-# 🛠️ Actualizar sistema y herramientas básicas
-apt-get update -y
-apt-get install -y software-properties-common curl
+# Actualizar sistema
+apt update -y
+apt install -y suricata unzip curl vim htop net-tools
 
-# 📦 Agregar repositorio oficial de Suricata
-add-apt-repository -y ppa:oisf/suricata-stable
-apt-get update -y
+# Asegurar que el servicio SSH esté activo
+sed -i 's/^#Port 22/Port 22/' /etc/ssh/sshd_config
+sed -i 's/^#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+systemctl restart ssh
 
-# 🔒 Instalar Suricata
-apt-get install -y suricata
+# Agregar ruta para tráfico desde clientes VPN (solo válida si en subnet privada)
+echo "100.64.0.0/10 via 10.0.2.1" >> /etc/network/interfaces.d/vpn-route
+ip route add 100.64.0.0/10 via 10.0.2.1 || echo "La ruta será válida al reiniciar en subred privada"
 
-# 🔄 Habilitar e iniciar el servicio de Suricata
-systemctl enable suricata
-systemctl start suricata
-
-# ⚠️ Agregar una regla personalizada de ejemplo (detección de intento Telnet)
-echo 'alert tcp any any -> any 23 (msg:"TELNET attempt"; sid:1000001; rev:1;)' >> /etc/suricata/rules/local.rules
-
-# 📡 Descargar reglas oficiales adicionales
-suricata-update || true
-
-# 🔁 Reiniciar Suricata para aplicar nuevas reglas
-systemctl restart suricata
+# Ejecutar Suricata en modo IDS pasivo
+IFACE=$(ip -o -4 route show to default | awk '{print $5}')
+suricata -i $IFACE -D

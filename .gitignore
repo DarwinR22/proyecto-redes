@@ -1,11 +1,11 @@
 ########################################
-# 🌍 Terraform - Archivos de estado y configuración
+# 🌍 Terraform - Archivos de estado y configuracion
 ########################################
 *.tfstate             # Estado actual de la infraestructura
 *.tfstate.backup      # Backup del estado anterior
 .terraform/           # Archivos internos de Terraform
 .terraform.lock.hcl   # Lockfile con versiones de proveedor
-terraform.tfplan      # Planes de ejecución (no se deben subir)
+terraform.tfplan      # Planes de ejecucion (no se deben subir)
 *.tfvars              # Variables sensibles (nunca subir a Git)
 
 ########################################
@@ -23,7 +23,7 @@ Thumbs.db             # Windows
 ########################################
 # 🛠️ Archivos temporales o de usuario
 ########################################
-*.log                 # Logs de depuración
+*.log                 # Logs de depuracion
 *.bak                 # Backups manuales
 *.tmp                 # Archivos temporales
 *.swp                 # Archivos swap de editores (Vim, etc.)
@@ -39,7 +39,7 @@ Thumbs.db             # Windows
 # 🔐 Archivos de entorno y secretos
 ########################################
 .env                  # Variables de entorno sensibles (ej: claves API, contraseñas)
-secrets.auto.tfvars   # Si usas archivos automáticos con secretos
+secrets.auto.tfvars   # Si usas archivos automaticos con secretos
 *.pem                 # Claves privadas (ej: SSH)
 *.key                 # Claves privadas (ej: SSH)
-*.pub                 # Claves públicas (ej: SSH).terraform/
+*.pub                 # Claves publicas (ej: SSH).terraform/

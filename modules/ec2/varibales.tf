@@ -4,9 +4,9 @@ variable "ami_id" {
   type        = string
 }
 
-# 🌐 Subred donde se desplegará la instancia (debe ser pública si se quiere acceso externo)
+# 🌐 Subred donde se desplegara la instancia (debe ser publica si se quiere acceso externo)
 variable "subnet_id" {
-  description = "ID de la subred pública donde se desplegará el servidor web"
+  description = "ID de la subred publica donde se desplegara el servidor web"
   type        = string
 }
 
@@ -16,8 +16,37 @@ variable "vpc_id" {
   type        = string
 }
 
-# 🔐 Clave SSH necesaria para conectarse vía terminal
+# 🔐 Clave SSH necesaria para conectarse via terminal
 variable "key_name" {
   description = "Nombre de la clave SSH para acceder a la instancia EC2"
   type        = string
+}
+
+variable "environment" {
+  description = "Entorno (dev/prod)"
+  type        = string
+}
+
+variable "project" {
+  description = "Nombre del proyecto para tag Project"
+  type        = string
+  default     = "redesYa"
+}
+
+variable "cost_center" {
+  description = "Codigo de CostCenter"
+  type        = string
+  default     = "SECNET"
+}
+
+variable "owner" {
+  description = "Dueño del recurso"
+  type        = string
+  default     = "Darwin Lopez"
+}
+
+variable "extra_tags" {
+  description = "Tags adicionales opcionales"
+  type        = map(string)
+  default     = {}
 }

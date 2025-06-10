@@ -1,37 +1,81 @@
-# 📦 AMI base de Windows Server (ej. Windows Server 2019 Base)
 variable "ami_id" {
-  description = "AMI de Windows Server"
+  description = "AMI de Windows Server 2019"
   type        = string
 }
 
-# 🖥️ Tipo de instancia EC2 (t2.medium recomendado para Active Directory)
 variable "instance_type" {
-  description = "Tipo de instancia para el servidor de dominio"
+  description = "Tipo de instancia para AD DS"
   type        = string
   default     = "t2.medium"
 }
 
-# 🌐 Subred en la que se desplegará la instancia
 variable "subnet_id" {
-  description = "ID de la subred donde se alojará el servidor Windows"
+  description = "ID de la subred donde se desplegara el controlador"
   type        = string
 }
 
-# 🏛️ VPC a la que pertenece la subred
 variable "vpc_id" {
-  description = "ID de la VPC del servidor Windows"
+  description = "ID de la VPC"
   type        = string
 }
 
-# 🔐 Nombre del par de llaves SSH/RDP
 variable "key_name" {
-  description = "Nombre de la clave SSH para acceder (usado con RDP)"
+  description = "Nombre del par de llaves para RDP"
   type        = string
 }
 
-# 🏷️ Etiquetas adicionales para la instancia
-variable "tags" {
-  description = "Etiquetas adicionales para la instancia"
+variable "private_ip" {
+  description = "IP privada fija para el controlador (ej: 10.0.1.145)"
+  type        = string
+}
+
+# Nuevas variables para restricciones y etiquetado
+variable "admin_ip" {
+  description = "CIDR de la IP del administrador (ej: \"190.14.138.134/32\")"
+  type        = string
+}
+
+variable "vpc_cidr" {
+  description = "CIDR block de la VPC (ej: \"10.0.0.0/16\")"
+  type        = string
+}
+
+variable "domain_name" {
+  description = "Nombre DNS del dominio a crear (ej: project-redes.local)"
+  type        = string
+}
+
+variable "safe_mode_password" {
+  description = "Contraseña Safe Mode para AD DS"
+  type        = string
+  sensitive   = true
+}
+
+variable "environment" {
+  description = "Entorno de despliegue (dev/prod)"
+  type        = string
+}
+
+variable "project" {
+  description = "Tag Project"
+  type        = string
+  default     = "redesYa"
+}
+
+variable "cost_center" {
+  description = "Tag CostCenter"
+  type        = string
+  default     = "SECNET"
+}
+
+variable "owner" {
+  description = "Tag Owner"
+  type        = string
+  default     = "Darwin Lopez "
+}
+
+variable "extra_tags" {
+  description = "Tags adicionales opcionales"
   type        = map(string)
   default     = {}
 }

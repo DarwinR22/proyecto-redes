@@ -2,20 +2,36 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const ldap = require("ldapjs");
+const https = require("https");
+const fs = require("fs");
+const path = require("path");
 
 const app = express();
-const port = 3000;
+const port = 443;
+
+// Certificados SSL de Let's Encrypt
+const options = {
+  key: fs.readFileSync("/etc/letsencrypt/live/redes-project.duckdns.org/privkey.pem"),
+  cert: fs.readFileSync("/etc/letsencrypt/live/redes-project.duckdns.org/fullchain.pem")
+};
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
+app.use(express.static("/var/www/html")); // Servir archivos estáticos
 
-// Configuración LDAP con IP privada del AD
+// Configuración LDAP
 const ldapOptions = {
-  url: "ldap://10.0.1.145", // ✅ IP privada real del servidor AD
+  url: "ldap://10.0.2.145",
   reconnect: true,
 };
 
+// Ruta principal: sirve index.html
+app.get("/", (req, res) => {
+  res.sendFile(path.join("/var/www/html", "index.html"));
+});
+
+// Ruta de login
 app.post("/api/login", async (req, res) => {
   const { username, password } = req.body;
 
@@ -27,29 +43,29 @@ app.post("/api/login", async (req, res) => {
   }
 
   const client = ldap.createClient(ldapOptions);
+  const userPrincipalName = `${username}@project-redes.local`;
 
-  // Armado del DN correcto (según tu estructura en AD)
-  const userDN = `CN=${username},OU=Usuarios,DC=project-redes,DC=local`;
-
-  client.bind(userDN, password, (err) => {
+  client.bind(userPrincipalName, password, (err) => {
     if (err) {
-      console.error("❌ Error de autenticación LDAP:", err.message);
+      console.error("❌ Fallo de autenticación LDAP:", err.message);
       return res.status(401).json({
         success: false,
         message: "Credenciales inválidas o conexión fallida",
       });
     }
 
-    // Si el bind fue exitoso
-    console.log(`✅ Usuario autenticado: ${username}`);
+    console.log(`✅ Usuario autenticado correctamente: ${userPrincipalName}`);
     client.unbind();
-    return res.json({
+
+    // ✅ Redirigir a home.html desde backend
+    res.json({
       success: true,
-      message: "Autenticación exitosa",
+      redirect: "/home.html" // el frontend puede usar esto para redirigir
     });
   });
 });
 
-app.listen(port, "0.0.0.0", () => {
-  console.log(`✅ API LDAP escuchando en http://0.0.0.0:${port}`);
+// Servidor HTTPS
+https.createServer(options, app).listen(port, () => {
+  console.log(`✅ API LDAP corriendo en https://0.0.0.0:${port}`);
 });

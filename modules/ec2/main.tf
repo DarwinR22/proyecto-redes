@@ -1,34 +1,50 @@
-# 🚀 Recurso que define una instancia EC2 que actuará como servidor web
-resource "aws_instance" "web" {
-  ami                         = var.ami_id                           # AMI especificada para el sistema operativo (Amazon Linux 2 u otro)
-  instance_type               = "t2.micro"                           # Tipo de instancia (nivel gratuito)
-  subnet_id                   = var.subnet_id                        # Subred pública donde se desplegará
-  vpc_security_group_ids      = [aws_security_group.web_sg.id]       # Asociar grupo de seguridad definido abajo
-  key_name                    = var.key_name                         # Clave SSH para acceso remoto
-  user_data                   = data.template_file.user_data.rendered # Script de configuración inicial
+// modules/ec2/main.tf
 
-  tags = {
-    Name = "web-server"                                            # Etiqueta identificadora en AWS
-  }
+# 🚀 Instancia EC2 para el servidor web
+resource "aws_instance" "web" {
+  ami                         = var.ami_id
+  instance_type               = "t2.micro"
+  subnet_id                   = var.subnet_id
+  vpc_security_group_ids      = [aws_security_group.web_sg.id]
+  key_name                    = var.key_name
+  #user_data                   = data.template_file.user_data.rendered
+
+  tags = merge(
+    var.extra_tags,
+    {
+      Name       = "web-server"
+      Project    = var.project
+      Env        = var.environment
+      CostCenter = var.cost_center
+      Owner      = var.owner
+    }
+  )
 }
 
-# 🔒 Recurso que define el grupo de seguridad para la instancia EC2
+# 🔒 Security Group del servidor web
 resource "aws_security_group" "web_sg" {
   name        = "web-sg"
-  description = "Permite acceso HTTP (80), Node.js (3000) y SSH (22)"
+  description = "Permite HTTP (80), Node.js (3000) y SSH (22)"
   vpc_id      = var.vpc_id
 
-  # Reglas de entrada (ingress)
-  ingress {
-    description = "Permitir tráfico HTTP (puerto 80)"
+    ingress {
+    description = "Permitir HTTP (80)"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Acceso desde cualquier IP
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
-    description = "Permitir tráfico al backend (Node.js) en puerto 3000"
+    description = "Permitir HTTPS (443)"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Permitir Node.js (3000)"
     from_port   = 3000
     to_port     = 3000
     protocol    = "tcp"
@@ -36,36 +52,41 @@ resource "aws_security_group" "web_sg" {
   }
 
   ingress {
-    description = "Permitir acceso SSH (puerto 22) solo desde IP del administrador"
+    description = "Permitir SSH (22) solo desde administrador"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["190.14.138.179/32"] # IP publica del administrador
+    cidr_blocks = ["190.14.138.134/32"]
   }
-
-  # Reglas de salida (egress)
   egress {
+    description = "Permitir todo el trafico de salida"
     from_port   = 0
     to_port     = 0
-    protocol    = "-1"               # Todos los protocolos
-    cidr_blocks = ["0.0.0.0/0"]      # Permitir todo hacia afuera
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    Name = "web-sg"  # Nombre del grupo para identificar en consola AWS
-  }
+  tags = merge(
+    var.extra_tags,
+    {
+      Name       = "web-sg"
+      Project    = var.project
+      Env        = var.environment
+      CostCenter = var.cost_center
+      Owner      = var.owner
+    }
+  )
 }
 
-# 📦 Recurso que genera el script user_data con archivos embebidos codificados en base64
+# 📦 Monta el script user_data con los archivos embebidos
 data "template_file" "user_data" {
-  template = file("${path.module}/user_data.sh")  # Script base
+  template = file("${path.module}/user_data.sh")
 
-  # Variables que serán reemplazadas en el template
   vars = {
-    index_html = base64encode(file("${path.module}/files/index.html"))     # Página principal
-    home_html  = base64encode(file("${path.module}/files/home.html"))      # Página secundaria
-    style_css  = base64encode(file("${path.module}/files/css/style.css"))  # Estilos del sitio
-    login_js   = base64encode(file("${path.module}/files/js/login.js"))    # Lógica frontend
-    login_api  = base64encode(file("${path.module}/files/login-api.js"))   # API backend (Node.js)
+    index_html = base64encode(file("${path.module}/files/index.html"))
+    home_html  = base64encode(file("${path.module}/files/home.html"))
+    style_css  = base64encode(file("${path.module}/files/css/style.css"))
+    login_js   = base64encode(file("${path.module}/files/js/login.js"))
+    login_api  = base64encode(file("${path.module}/files/login-api.js"))
   }
 }
