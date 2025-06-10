@@ -118,6 +118,11 @@ terraform destroy -var-file="dev.tfvars"
 
 ---
 
+## 🚀 Diagrama de Arquitectura
+
+!Diagrama de arquitectura
+
+
 ## 🧠 Notas finales
 
 - Todos los servidores estan desplegados en la region `us-east-1`
