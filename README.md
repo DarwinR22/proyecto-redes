@@ -64,7 +64,7 @@ Se utilizaron servicios clave de AWS como EC2, S3, VPC, y se integraron solucion
 | Pagina de Login                  | ✅ Cumplido |
 | Servidor de Dominio + AD         | ✅ Cumplido |
 | Firewall (VNS3)                  | ✅ Cumplido |
-| IDS / IPS (Suricata)             | ✅ Cumplido (documentar logs) |
+| IDS / IPS (Suricata)             | ✅ Cumplido |
 | Accesos Publicos (Web, RDP)      | ✅ Cumplido |
 | Accesos Privados (VPN)           | ✅ Cumplido |
 | Segmentacion y SGs especificos   | ✅ Cumplido |
